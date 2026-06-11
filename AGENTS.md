@@ -52,13 +52,25 @@ packages/happy-cli/src/
 │   └── runCodex.ts                          # Codex runner
 ├── gemini/
 │   └── runGemini.ts                         # Gemini runner（走 ACP）
-├── reasonix/                                # ✅ 已删除 — 不再需要
-│   └── runReasonix.ts                       # ❌ 旧的 pipe 实现（已删除）
 ├── commands/
-│   ├── reasonixCommand.ts                   # ✅ 重写 — 现在调用 runAcp
+│   ├── reasonixCommand.ts                   # ✅ 重写 — 现在调用 runAcp + --model
 │   └── codexCommand.ts
 └── utils/
     └── createSessionMetadata.ts             # ✏️ 加了 'reasonix' flavor
+
+packages/happy-app/sources/
+├── sync/
+│   ├── persistence.ts                       # ✏️ NewSessionAgentType 加 'reasonix'
+│   ├── agentDefaults.ts                     # ✏️ reasonix 默认 yolo/deepseek-v4-pro/max
+│   ├── ops.ts                               # ✏️ SpawnSessionOptions + RPC 加 model
+│   └── storageTypes.ts                      # ✏️ cliAvailability 加 reasonix
+├── components/
+│   ├── modelModeOptions.ts                  # ✏️ Reasonix 模型/权限/effort 列表
+│   └── Avatar.tsx                           # ✏️ flavorIcons 加 reasonix
+└── app/(app)/
+    ├── new/index.tsx                         # ✏️ ALL_AGENTS + spawn 透传 model
+    ├── settings/agents.tsx                  # ✏️ agentLabels 加 reasonix
+    └── machine/[id].tsx                     # ✏️ Reasonix CLI 可用性行
 ```
 
 ## 架构：消息流
@@ -76,13 +88,14 @@ packages/happy-cli/src/
 3. `AcpSessionManager` 将 ACP 事件 → SessionEnvelope
 4. SessionEnvelope → Happy Server → 手机 App（渲染消息）
 
-### 错误路径（我们当前的实现）
+## 当前状态
 
-```
-reasonix code ──stdout pipe──→ sendSessionEvent({type:'message', …}) ──→ 手机 App ❌
-```
-
-直接 pipe 纯文本 stdout，手机 App **不识别**，因此无法渲染。
+- ✅ `happy reasonix` CLI 正常工作（ACP 管线 → SessionEnvelope）
+- ✅ 手机 App 新建会话可选 Reasonix（需重新 build APK）
+- ✅ 支持权限模式（default / yolo）、模型（deepseek-v4-pro 等）、推理强度（max）
+- ✅ 启动时 `--model` 透传到 `reasonix acp --model <name>`
+- ⚠️ 会话中途不支持切换模型（Reasonix ACP `configOptions=0`）
+- ⚠️ Reasonix 有时自称 Claude（DeepSeek system prompt 问题，非集成 bug）
 
 ## 构建命令
 
@@ -104,9 +117,25 @@ eas build --platform android --profile preview  # 云构建 APK
 
 ## 我们改了什么
 
+### Phase 1 — 修复 happy reasonix 走 ACP 管线
 1. `packages/happy-cli/src/index.ts` — 加了 `happy reasonix` 命令入口
-2. `packages/happy-cli/src/commands/reasonixCommand.ts` — ✅ 重写：解析参数后调用 `runAcp({ agentName:'reasonix', command:'reasonix', args:['acp'] })`
-3. `packages/happy-cli/src/reasonix/runReasonix.ts` — ❌ 已删除（错误的 pipe 实现）
+2. `packages/happy-cli/src/commands/reasonixCommand.ts` — ✅ 重写：解析参数 → `runAcp({ agentName:'reasonix', command:'reasonix', args:['acp'] })`；支持 `--model`、`--permission-mode`、`--yolo`、`--verbose`
+3. `packages/happy-cli/src/reasonix/runReasonix.ts` — ❌ 已删除（错误的 `reasonix code` pipe 实现）
 4. `packages/happy-cli/src/utils/createSessionMetadata.ts` — 加了 `'reasonix'` flavor 类型
-5. `packages/happy-cli/src/agent/acp/acpAgentConfig.ts` — ✅ 已注册 `reasonix: { command: 'reasonix', args: ['acp'] }`
+5. `packages/happy-cli/src/agent/acp/acpAgentConfig.ts` — ✅ `reasonix: { command: 'reasonix', args: ['acp'] }`
 6. `packages/happy-cli/src/agent/acp/runAcp.ts` — ✅ `resolveSessionFlavor` 返回 `'reasonix'`，新增 `initialPermissionMode` 参数
+
+### Phase 2 — Reasonix 成为 happy-app 一等公民
+7. `packages/happy-cli/src/utils/detectCLI.ts` — CLIAvailability 加 `reasonix: boolean`
+8. `packages/happy-cli/src/modules/common/registerCommonHandlers.ts` — SpawnSessionOptions agent union 加 `'reasonix'`，加 `model` 字段
+9. `packages/happy-cli/src/daemon/controlServer.ts` — spawn-session schema 加 `'reasonix'` + `model`
+10. `packages/happy-cli/src/daemon/run.ts` — tmux / 普通 spawn 都支持 reasonix，透传 `--model`
+11. `packages/happy-app/sources/sync/persistence.ts` — NewSessionAgentType 加 `'reasonix'`
+12. `packages/happy-app/sources/sync/agentDefaults.ts` — reasonix 默认 `yolo` / `deepseek-v4-pro` / `max`
+13. `packages/happy-app/sources/components/modelModeOptions.ts` — Reasonix 模型列表 (deepseek-v4-pro/flash/pro/flash/mimo)、权限 (default/yolo)、effort (low/medium/high/max)
+14. `packages/happy-app/sources/app/(app)/new/index.tsx` — ALL_AGENTS + agentIcons 加 Reasonix，spawn 时透传 model
+15. `packages/happy-app/sources/components/Avatar.tsx` — flavorIcons 加 reasonix（复用 gpt icon）
+16. `packages/happy-app/sources/app/(app)/settings/agents.tsx` — agentLabels 加 reasonix
+17. `packages/happy-app/sources/app/(app)/machine/[id].tsx` — 机器详情页加 Reasonix CLI 可用性行
+18. `packages/happy-app/sources/sync/storageTypes.ts` — cliAvailability zod schema 加 reasonix
+19. `packages/happy-app/sources/sync/ops.ts` — SpawnSessionOptions + RPC 加 model
