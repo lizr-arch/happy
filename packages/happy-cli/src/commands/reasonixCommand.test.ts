@@ -86,10 +86,27 @@ describe('handleReasonixCommand', () => {
     );
   });
 
+  it('parses --model and passes it as acp args', async () => {
+    await handleReasonixCommand(['--model', 'deepseek-v4-pro']);
+
+    expect(mocks.mockRunAcp).toHaveBeenCalledWith(
+      expect.objectContaining({ args: ['acp', '--model', 'deepseek-v4-pro'] }),
+    );
+  });
+
+  it('uses default args when no --model provided', async () => {
+    await handleReasonixCommand([]);
+
+    expect(mocks.mockRunAcp).toHaveBeenCalledWith(
+      expect.objectContaining({ args: ['acp'] }),
+    );
+  });
+
   it('combines all flags correctly', async () => {
     await handleReasonixCommand([
       '--started-by', 'terminal',
       '--permission-mode', 'yolo',
+      '--model', 'deepseek-v4-pro',
       '--verbose',
     ]);
 
@@ -97,7 +114,7 @@ describe('handleReasonixCommand', () => {
       credentials: { token: 'token', encryption: { type: 'legacy', secret: expect.any(Uint8Array) } },
       agentName: 'reasonix',
       command: 'reasonix',
-      args: ['acp'],
+      args: ['acp', '--model', 'deepseek-v4-pro'],
       startedBy: 'terminal',
       verbose: true,
       initialPermissionMode: 'yolo',

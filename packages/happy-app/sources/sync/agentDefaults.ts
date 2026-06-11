@@ -34,7 +34,7 @@ const codeAgentDefaults: Record<AgentKey, AgentDefaultConfig> = {
     codex: { permissionMode: 'yolo', modelMode: 'gpt-5.5', effortLevel: 'medium' },
     gemini: { permissionMode: 'default', modelMode: 'gemini-2.5-pro', effortLevel: null },
     openclaw: { permissionMode: 'default', modelMode: 'default', effortLevel: null },
-    reasonix: { permissionMode: 'yolo', modelMode: 'default', effortLevel: null },
+    reasonix: { permissionMode: 'yolo', modelMode: 'deepseek-v4-pro', effortLevel: 'max' },
 };
 
 export function normalizeAgentKey(flavor: string | null | undefined): AgentKey {

@@ -138,7 +138,11 @@ export function getOpenClawModelModes(): ModelMode[] {
 
 export function getReasonixModelModes(): ModelMode[] {
     return [
-        { key: 'default', name: 'default model', description: null },
+        { key: 'deepseek-v4-pro', name: 'deepseek v4 pro', description: 'most capable' },
+        { key: 'deepseek-v4-flash', name: 'deepseek v4 flash', description: 'fast & efficient' },
+        { key: 'deepseek-pro', name: 'deepseek pro', description: 'balanced' },
+        { key: 'deepseek-flash', name: 'deepseek flash', description: 'fastest' },
+        { key: 'mimo', name: 'mimo', description: 'mini-moE' },
     ];
 }
 
@@ -239,27 +243,37 @@ export function getCodexEffortLevels(): EffortLevel[] {
     ];
 }
 
+export function getReasonixEffortLevels(): EffortLevel[] {
+    return [
+        { key: 'low', name: 'low' },
+        { key: 'medium', name: 'medium' },
+        { key: 'high', name: 'high' },
+        { key: 'max', name: 'max' },
+    ];
+}
+
 export function getHardcodedEffortLevels(flavor: AgentFlavor): EffortLevel[] {
     if (flavor === 'claude') return getClaudeEffortLevels();
     if (flavor === 'codex') return getCodexEffortLevels();
+    if (flavor === 'reasonix') return getReasonixEffortLevels();
     return [];
 }
 
 export function getDefaultEffortKey(flavor: AgentFlavor): string | null {
-    return getCodeAgentDefaults(flavor).effortLevel;
+    const defaults = getCodeAgentDefaults(flavor);
+    return defaults.effortLevel;
 }
 
 // Per-model effort: returns effort levels for a specific model, or empty if the model has no effort
 export function getEffortLevelsForModel(flavor: AgentFlavor, _modelKey: string): EffortLevel[] {
-    // Claude and Codex expose effort/thought levels regardless of which
-    // specific model is picked — the same low/medium/high/max scale applies
-    // to the whole flavor (mirrors how Codex already worked, which the user
-    // asked Claude to match).
     if (flavor === 'claude') {
         return getClaudeEffortLevels();
     }
     if (flavor === 'codex') {
         return getCodexEffortLevels();
+    }
+    if (flavor === 'reasonix') {
+        return getReasonixEffortLevels();
     }
     return [];
 }

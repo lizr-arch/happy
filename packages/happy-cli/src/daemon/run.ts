@@ -411,7 +411,7 @@ export async function startDaemon(): Promise<void> {
           const resumeFragment = resumeId
             ? ` --resume ${shellescape(resumeId)}`
             : '';
-          const fullCommand = `node --no-warnings --no-deprecation ${cliPath} ${agent} --happy-starting-mode remote --started-by daemon${resumeFragment}`;
+          const fullCommand = `node --no-warnings --no-deprecation ${cliPath} ${agent} --happy-starting-mode remote --started-by daemon${resumeFragment}${agent === 'reasonix' && options.model ? ` --model ${shellescape(options.model)}` : ''}`;
 
           // Spawn in tmux with environment variables
           // IMPORTANT: Pass complete environment (process.env + extraEnv) because:
@@ -523,6 +523,11 @@ export async function startDaemon(): Promise<void> {
             '--happy-starting-mode', 'remote',
             '--started-by', 'daemon'
           ];
+
+          // Pass model override for agents that support --model on startup
+          if (options.model && (agentCommand === 'reasonix')) {
+            args.push('--model', options.model);
+          }
 
           // Resume ids attach the new Happy session to a pre-existing provider
           // conversation created by the fork / duplicate RPC.

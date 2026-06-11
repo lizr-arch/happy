@@ -5,6 +5,7 @@ import { runAcp } from '@/agent/acp/runAcp';
 export async function handleReasonixCommand(args: string[]): Promise<void> {
   let startedBy: 'daemon' | 'terminal' | undefined = undefined;
   let permissionMode: string | undefined = undefined;
+  let model: string | undefined = undefined;
   let verbose = false;
 
   for (let i = 0; i < args.length; i++) {
@@ -14,6 +15,8 @@ export async function handleReasonixCommand(args: string[]): Promise<void> {
       permissionMode = args[++i];
     } else if (args[i] === '--yolo') {
       permissionMode = 'yolo';
+    } else if (args[i] === '--model') {
+      model = args[++i];
     } else if (args[i] === '--verbose') {
       verbose = true;
     }
@@ -22,11 +25,13 @@ export async function handleReasonixCommand(args: string[]): Promise<void> {
   const { credentials } = await authAndSetupMachineIfNeeded();
   await ensureDaemonRunning();
 
+  const acpArgs = model ? ['acp', '--model', model] : ['acp'];
+
   await runAcp({
     credentials,
     agentName: 'reasonix',
     command: 'reasonix',
-    args: ['acp'],
+    args: acpArgs,
     startedBy,
     verbose,
     initialPermissionMode: permissionMode,

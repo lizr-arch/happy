@@ -943,6 +943,7 @@ function NewSessionScreen() {
                 directory: spawnDirectory,
                 approvedNewDirectoryCreation,
                 agent: selectedAgent,
+                model: currentModelKey !== effectiveAgentDefaults.modelMode ? currentModelKey : undefined,
             });
 
             switch (result.type) {

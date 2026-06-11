@@ -123,6 +123,8 @@ export interface SpawnSessionOptions {
     agent?: 'claude' | 'codex' | 'gemini' | 'openclaw' | 'reasonix';
     environmentVariables?: Record<string, string>;
     token?: string;
+    /** Model override — passed as --model <name> to the agent CLI. */
+    model?: string;
     /**
      * If set, the daemon spawns the agent with `--resume <id>` so the new
      * Happy session continues from an existing Claude conversation file.
