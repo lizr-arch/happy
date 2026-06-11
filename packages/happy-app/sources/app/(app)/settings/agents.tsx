@@ -41,6 +41,7 @@ const agentLabels: Record<AgentKey, string> = {
     codex: 'Codex',
     gemini: 'Gemini',
     openclaw: 'OpenClaw',
+    reasonix: 'Reasonix',
 };
 
 function optionName(options: ModeOption[], key: string | null | undefined): string {

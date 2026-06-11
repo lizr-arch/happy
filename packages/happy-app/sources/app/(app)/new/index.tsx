@@ -66,6 +66,7 @@ const agentIcons = {
     codex: require('@/assets/images/icon-gpt.png'),
     openclaw: require('@/assets/images/icon-openclaw.png'),
     gemini: require('@/assets/images/icon-gemini.png'),
+    reasonix: require('@/assets/images/icon-gpt.png'),
 };
 
 type AgentKey = NewSessionAgentType;
@@ -74,6 +75,7 @@ const ALL_AGENTS: { key: AgentKey; label: string }[] = [
     { key: 'codex', label: 'codex' },
     { key: 'openclaw', label: 'openclaw' },
     { key: 'gemini', label: 'gemini' },
+    { key: 'reasonix', label: 'reasonix' },
 ];
 
 type PickerItem = { key: string; label: string; subtitle?: string; dimmed?: boolean };

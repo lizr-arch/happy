@@ -311,6 +311,8 @@ export async function startDaemon(): Promise<void> {
 
             // Set the environment variable for Codex
             authEnv.CODEX_HOME = codexHomeDir.name;
+          } else if (options.agent === 'reasonix') {
+            // Reasonix uses its own API key — no cloud token passthrough needed
           } else { // Assuming claude
             authEnv.CLAUDE_CODE_OAUTH_TOKEN = options.token;
           }
@@ -402,7 +404,7 @@ export async function startDaemon(): Promise<void> {
           // Construct command for the CLI
           const cliPath = join(projectPath(), 'dist', 'index.mjs');
           // Determine agent command - support claude, codex, and gemini
-          const agent = options.agent === 'gemini' ? 'gemini' : (options.agent === 'codex' ? 'codex' : (options.agent === 'openclaw' ? 'openclaw' : 'claude'));
+          const agent = options.agent === 'gemini' ? 'gemini' : (options.agent === 'codex' ? 'codex' : (options.agent === 'openclaw' ? 'openclaw' : (options.agent === 'reasonix' ? 'reasonix' : 'claude')));
           const resumeId = agent === 'claude'
             ? options.resumeClaudeSessionId
             : (agent === 'codex' ? options.resumeCodexThreadId : undefined);
@@ -506,6 +508,9 @@ export async function startDaemon(): Promise<void> {
               break;
             case 'openclaw':
               agentCommand = 'openclaw';
+              break;
+            case 'reasonix':
+              agentCommand = 'reasonix';
               break;
             default:
               return {

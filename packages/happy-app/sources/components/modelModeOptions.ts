@@ -107,6 +107,13 @@ export function getOpenClawPermissionModes(translate: Translate): PermissionMode
     ];
 }
 
+export function getReasonixPermissionModes(translate: Translate): PermissionMode[] {
+    return [
+        { key: 'default', name: translate('agentInput.permissionMode.default'), description: null },
+        { key: 'yolo', name: translate('agentInput.codexPermissionMode.yolo'), description: null },
+    ];
+}
+
 export function getHardcodedPermissionModes(flavor: AgentFlavor, translate: Translate): PermissionMode[] {
     if (flavor === 'codex') {
         return getCodexPermissionModes(translate);
@@ -117,10 +124,19 @@ export function getHardcodedPermissionModes(flavor: AgentFlavor, translate: Tran
     if (flavor === 'openclaw') {
         return getOpenClawPermissionModes(translate);
     }
+    if (flavor === 'reasonix') {
+        return getReasonixPermissionModes(translate);
+    }
     return getClaudePermissionModes(translate);
 }
 
 export function getOpenClawModelModes(): ModelMode[] {
+    return [
+        { key: 'default', name: 'default model', description: null },
+    ];
+}
+
+export function getReasonixModelModes(): ModelMode[] {
     return [
         { key: 'default', name: 'default model', description: null },
     ];
@@ -135,6 +151,9 @@ export function getHardcodedModelModes(flavor: AgentFlavor, _translate: Translat
     }
     if (flavor === 'openclaw') {
         return getOpenClawModelModes();
+    }
+    if (flavor === 'reasonix') {
+        return getReasonixModelModes();
     }
     return getClaudeModelModes();
 }
@@ -254,5 +273,6 @@ export function getDefaultEffortKeyForModel(flavor: AgentFlavor, modelKey: strin
 
 export function getSupportsWorktree(flavor: AgentFlavor): boolean {
     if (flavor === 'openclaw') return false;
+    if (flavor === 'reasonix') return true;
     return true;
 }
