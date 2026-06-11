@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { KNOWN_ACP_AGENTS, resolveAcpAgentConfig } from './acpAgentConfig';
 
 describe('KNOWN_ACP_AGENTS', () => {
-  it('defines built-in Gemini and OpenCode command mappings', () => {
+  it('defines built-in Gemini, OpenCode, and Reasonix command mappings', () => {
     expect(KNOWN_ACP_AGENTS).toEqual({
       gemini: { command: 'gemini', args: ['--experimental-acp'] },
       opencode: { command: 'opencode', args: ['acp'] },
+      reasonix: { command: 'reasonix', args: ['acp'] },
     });
   });
 });
@@ -24,6 +25,14 @@ describe('resolveAcpAgentConfig', () => {
       agentName: 'opencode',
       command: 'opencode',
       args: ['acp', '--foo'],
+    });
+  });
+
+  it('resolves reasonix as a known ACP agent', () => {
+    expect(resolveAcpAgentConfig(['reasonix'])).toEqual({
+      agentName: 'reasonix',
+      command: 'reasonix',
+      args: ['acp'],
     });
   });
 

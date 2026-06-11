@@ -654,4 +654,149 @@ describe('runAcp', () => {
     expect(mocks.backendState.setModeCalls).toEqual([]);
     expect(mocks.backendState.setModelCalls).toEqual([]);
   });
+
+  it('runs with reasonix agentName and wires backend messages correctly', async () => {
+    const runPromise = runAcp({
+      credentials: { token: 'token', encryption: { type: 'legacy', secret: new Uint8Array(32) } },
+      agentName: 'reasonix',
+      command: 'reasonix',
+      args: ['acp'],
+    });
+
+    await vi.waitFor(() => {
+      expect(mocks.getUserMessageHandler()).toBeTypeOf('function');
+    });
+
+    mocks.getUserMessageHandler()!({
+      role: 'user',
+      content: { type: 'text', text: 'Hello Reasonix' },
+    });
+
+    await vi.waitFor(() => {
+      expect(mocks.backendState.prompts).toHaveLength(1);
+    });
+
+    await mocks.getKillHandler()!();
+    await runPromise;
+
+    expect(mocks.backendState.constructorArgs.command).toBe('reasonix');
+    expect(mocks.backendState.constructorArgs.args).toEqual(['acp']);
+    expect(mocks.backendState.prompts[0]).toEqual({
+      sessionId: 'acp-session-1',
+      prompt: 'Hello Reasonix',
+    });
+
+    const envelopeTypes = mocks.mockSession.sendSessionProtocolMessage.mock.calls.map(([envelope]) => envelope.ev.t);
+    expect(envelopeTypes).toEqual(['turn-start', 'text', 'tool-call-start', 'tool-call-end', 'turn-end']);
+  });
+
+  it('uses initialPermissionMode to switch before first prompt when config options match', async () => {
+    mocks.backendState.startSessionMessages = [
+      {
+        type: 'event',
+        name: 'config_options_update',
+        payload: {
+          configOptions: [
+            {
+              type: 'select',
+              id: 'permission-mode',
+              name: 'Permission Mode',
+              category: 'mode',
+              currentValue: 'ask',
+              options: [
+                { value: 'ask', name: 'Ask' },
+                { value: 'yolo', name: 'Yolo' },
+              ],
+            },
+          ],
+        },
+      },
+    ];
+
+    const runPromise = runAcp({
+      credentials: { token: 'token', encryption: { type: 'legacy', secret: new Uint8Array(32) } },
+      agentName: 'reasonix',
+      command: 'reasonix',
+      args: ['acp'],
+      initialPermissionMode: 'yolo',
+    });
+
+    await vi.waitFor(() => {
+      expect(mocks.getUserMessageHandler()).toBeTypeOf('function');
+    });
+
+    // Send a message WITHOUT meta.permissionMode — initialPermissionMode should be used
+    mocks.getUserMessageHandler()!({
+      role: 'user',
+      content: { type: 'text', text: 'Run a command' },
+    });
+
+    await vi.waitFor(() => {
+      expect(mocks.backendState.prompts).toHaveLength(1);
+    });
+
+    await mocks.getKillHandler()!();
+    await runPromise;
+
+    // Should have switched to yolo mode before sending the prompt
+    expect(mocks.backendState.setConfigOptionCalls).toEqual([
+      { configId: 'permission-mode', value: 'yolo' },
+    ]);
+  });
+
+  it('allows user message meta to override initialPermissionMode', async () => {
+    mocks.backendState.startSessionMessages = [
+      {
+        type: 'event',
+        name: 'config_options_update',
+        payload: {
+          configOptions: [
+            {
+              type: 'select',
+              id: 'permission-mode',
+              name: 'Permission Mode',
+              category: 'mode',
+              currentValue: 'ask',
+              options: [
+                { value: 'ask', name: 'Ask' },
+                { value: 'yolo', name: 'Yolo' },
+                { value: 'code', name: 'Code' },
+              ],
+            },
+          ],
+        },
+      },
+    ];
+
+    const runPromise = runAcp({
+      credentials: { token: 'token', encryption: { type: 'legacy', secret: new Uint8Array(32) } },
+      agentName: 'reasonix',
+      command: 'reasonix',
+      args: ['acp'],
+      initialPermissionMode: 'yolo',
+    });
+
+    await vi.waitFor(() => {
+      expect(mocks.getUserMessageHandler()).toBeTypeOf('function');
+    });
+
+    // User message overrides with 'code'
+    mocks.getUserMessageHandler()!({
+      role: 'user',
+      content: { type: 'text', text: 'Run something' },
+      meta: { permissionMode: 'code' },
+    });
+
+    await vi.waitFor(() => {
+      expect(mocks.backendState.prompts).toHaveLength(1);
+    });
+
+    await mocks.getKillHandler()!();
+    await runPromise;
+
+    // Should have switched to code (overriding the initial yolo)
+    expect(mocks.backendState.setConfigOptionCalls).toEqual([
+      { configId: 'permission-mode', value: 'code' },
+    ]);
+  });
 });
