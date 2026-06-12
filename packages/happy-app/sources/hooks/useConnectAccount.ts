@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Platform } from 'react-native';
 import { CameraView } from 'expo-camera';
+import { useRouter } from 'expo-router';
 import { useAuth } from '@/auth/AuthContext';
 import { decodeBase64 } from '@/encryption/base64';
 import { encryptBox } from '@/encryption/libsodium';
@@ -16,6 +17,7 @@ interface UseConnectAccountOptions {
 
 export function useConnectAccount(options?: UseConnectAccountOptions) {
     const auth = useAuth();
+    const router = useRouter();
     const [isLoading, setIsLoading] = React.useState(false);
     const checkScannerPermissions = useCheckScannerPermissions();
 
@@ -51,14 +53,22 @@ export function useConnectAccount(options?: UseConnectAccountOptions) {
 
     const connectAccount = React.useCallback(async () => {
         if (await checkScannerPermissions()) {
-            // Use camera scanner
-            CameraView.launchScanner({
-                barcodeTypes: ['qr']
-            });
+            if (CameraView.isModernBarcodeScannerAvailable) {
+                try {
+                    await CameraView.launchScanner({
+                        barcodeTypes: ['qr']
+                    });
+                    return;
+                } catch (e) {
+                    console.warn('Failed to launch modern barcode scanner, falling back to in-app scanner', e);
+                }
+            }
+
+            router.push('/qr-scanner?target=account' as never);
         } else {
             Modal.alert(t('common.error'), t('modals.cameraPermissionsRequiredToScanQr'), [{ text: t('common.ok') }]);
         }
-    }, [checkScannerPermissions]);
+    }, [checkScannerPermissions, router]);
 
     const connectWithUrl = React.useCallback(async (url: string) => {
         return await processAuthUrl(url);

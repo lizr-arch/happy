@@ -136,6 +136,12 @@ export default function RootLayout() {
                 }}
             />
             <Stack.Screen
+                name="qr-scanner"
+                options={{
+                    headerShown: false,
+                }}
+            />
+            <Stack.Screen
                 name="restore/index"
                 options={{
                     headerShown: true,

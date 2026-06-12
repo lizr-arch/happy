@@ -70,11 +70,27 @@ describe('handleReasonixCommand', () => {
     );
   });
 
+  it('forwards --permission-mode yolo to the reasonix ACP command', async () => {
+    await handleReasonixCommand(['--permission-mode', 'yolo']);
+
+    expect(mocks.mockRunAcp).toHaveBeenCalledWith(
+      expect.objectContaining({ args: ['acp', '--yolo'] }),
+    );
+  });
+
   it('parses --yolo as a shortcut for permission mode yolo', async () => {
     await handleReasonixCommand(['--yolo']);
 
     expect(mocks.mockRunAcp).toHaveBeenCalledWith(
       expect.objectContaining({ initialPermissionMode: 'yolo' }),
+    );
+  });
+
+  it('forwards --yolo to the reasonix ACP command', async () => {
+    await handleReasonixCommand(['--yolo']);
+
+    expect(mocks.mockRunAcp).toHaveBeenCalledWith(
+      expect.objectContaining({ args: ['acp', '--yolo'] }),
     );
   });
 
@@ -114,7 +130,7 @@ describe('handleReasonixCommand', () => {
       credentials: { token: 'token', encryption: { type: 'legacy', secret: expect.any(Uint8Array) } },
       agentName: 'reasonix',
       command: 'reasonix',
-      args: ['acp', '--model', 'deepseek-v4-pro'],
+      args: ['acp', '--yolo', '--model', 'deepseek-v4-pro'],
       startedBy: 'terminal',
       verbose: true,
       initialPermissionMode: 'yolo',

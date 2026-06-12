@@ -108,11 +108,24 @@ cd packages/happy-cli && pnpm build
 
 # 本地安装（替换系统 happy 命令）
 node scripts/install-local.cjs
+```
 
-# 构建 happy-app（Android APK 需要 EAS Build）
-cd packages/happy-app
-pnpm start        # Expo dev server
-eas build --platform android --profile preview  # 云构建 APK
+Windows 本机构建 Android APK：
+
+```powershell
+cd F:\Code\GIT\happy
+$env:JAVA_HOME = "C:\Program Files\Microsoft\jdk-17.0.16.8-hotspot"
+$env:Path = "$env:JAVA_HOME\bin;$env:LOCALAPPDATA\Android\Sdk\platform-tools;$env:Path"
+$env:APP_ENV = "preview"
+pnpm install
+pnpm --filter happy-app typecheck
+packages\happy-app\android\gradlew.bat -p packages\happy-app\android assembleRelease
+```
+
+Android APK 本机打包细节、验签、安装到手机、常见 Windows/Gradle/CMake 错误见：
+
+```text
+docs/windows-android-build.md
 ```
 
 ## 我们改了什么

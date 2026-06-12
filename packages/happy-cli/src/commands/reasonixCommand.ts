@@ -25,7 +25,13 @@ export async function handleReasonixCommand(args: string[]): Promise<void> {
   const { credentials } = await authAndSetupMachineIfNeeded();
   await ensureDaemonRunning();
 
-  const acpArgs = model ? ['acp', '--model', model] : ['acp'];
+  const acpArgs = ['acp'];
+  if (permissionMode === 'yolo') {
+    acpArgs.push('--yolo');
+  }
+  if (model) {
+    acpArgs.push('--model', model);
+  }
 
   await runAcp({
     credentials,
